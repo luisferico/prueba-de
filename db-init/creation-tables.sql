@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS raw_coordinates (
     longitude DOUBLE PRECISION NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     processed BOOLEAN DEFAULT FALSE,
-    batch_id INTEGER,
+    batch_id VARCHAR(500),
     file_path VARCHAR(500) NOT NULL,
     CONSTRAINT valid_latitude CHECK (latitude BETWEEN -90 AND 90),
     CONSTRAINT valid_longitude CHECK (longitude BETWEEN -180 AND 180)

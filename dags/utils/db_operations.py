@@ -7,8 +7,6 @@ def load_to_database(transformed_file: str, batch_id: str, original_file: str) -
     """
     df = pl.read_csv(transformed_file)
     
-    batch_id = int(batch_id.split('T')[0])
-    
     pg_hook = PostgresHook(postgres_conn_id='postcodes_db')
     
     records = df.with_columns([
