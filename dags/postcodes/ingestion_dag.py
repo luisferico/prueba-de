@@ -135,7 +135,7 @@ def _load_to_raw_coordinates(**context):
     
     file_path = transformation_metrics['temp_file']
     original_file = context['task_instance'].xcom_pull(task_ids='get_file')
-    batch_id = context['dag_run'].run_id
+    batch_id = f"{context['ds']}_{str(context['dag_run'].id)}"
     
     records_loaded = load_to_database(file_path, batch_id, original_file)
     
