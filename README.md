@@ -25,8 +25,7 @@ graph TD
     PS -->|Consulta códigos postales| API[postcodes.io API]
     API -->|Devuelve información| PS
     PS -->|Actualiza registros| DB
-    PS -->|Reporta errores| FS
-    FS -->|Notifica resultado| Client
+    PS -->|Reporta errores| DB
 ```
 El flujo de datos en el sistema es el siguiente:
 
