@@ -11,15 +11,6 @@ CREATE TABLE IF NOT EXISTS raw_coordinates (
     CONSTRAINT valid_longitude CHECK (longitude BETWEEN -180 AND 180)
 );
 
--- Tabla para almacenar la relación entre coordenadas y códigos postales
-CREATE TABLE IF NOT EXISTS coordinates_postcodes (
-    id SERIAL PRIMARY KEY,
-    coordinate_id INTEGER REFERENCES raw_coordinates(id),
-    postcode_id INTEGER REFERENCES postcode_details(id),
-    distance DOUBLE PRECISION,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Tabla para almacenar la información completa de códigos postales
 CREATE TABLE IF NOT EXISTS postcode_details (
     id SERIAL PRIMARY KEY,
@@ -50,6 +41,15 @@ CREATE TABLE IF NOT EXISTS postcode_details (
     pfa VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_postcode UNIQUE (postcode)
+);
+
+-- Tabla para almacenar la relación entre coordenadas y códigos postales
+CREATE TABLE IF NOT EXISTS coordinates_postcodes (
+    id SERIAL PRIMARY KEY,
+    coordinate_id INTEGER REFERENCES raw_coordinates(id),
+    postcode_id INTEGER REFERENCES postcode_details(id),
+    distance DOUBLE PRECISION,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabla para almacenar los códigos de referencia

@@ -3,6 +3,7 @@ from airflow import DAG
 from airflow.sensors.filesystem import FileSensor
 from airflow.operators.python import PythonOperator
 from airflow.hooks.postgres_hook import PostgresHook
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 import os
 import polars as pl
@@ -134,7 +135,7 @@ def _load_to_raw_coordinates(**context):
         return 0
     
     file_path = transformation_metrics['temp_file']
-    original_file = context['task_instance'].xcom_pull(task_ids='get_file')
+    original_file = context['task_instance'].xcom_pull(task_ids='get_next_file')
     batch_id = f"{context['ds']}_{str(context['dag_run'].id)}"
     
     records_loaded = load_to_database(file_path, batch_id, original_file)
@@ -183,6 +184,11 @@ with DAG(
         python_callable=_load_to_raw_coordinates
     )
     
+    trigger_enrichment = TriggerDagRunOperator(
+        task_id='trigger_enrichment',
+        trigger_dag_id='02_postcode_enrichment',
+        trigger_rule='all_success'
+    )
     
     wait_for_csv >> get_next_file >> validate_data >> transform_data >> load_data
-    
+    load_data >> trigger_enrichment
