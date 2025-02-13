@@ -13,7 +13,7 @@ from utils.db_operations import (
 )
 
 default_args = {
-    'owner': 'airflow',
+    'owner': 'Luis Rico',
     'depends_on_past': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
@@ -22,7 +22,7 @@ default_args = {
 def _get_unprocessed_coordinates(**context):
     """Obtener coordenadas no procesadas en lotes"""
     
-    batch_size = 50000
+    batch_size = 2000
     coordinates = get_unprocessed_coordinates(batch_size)
     
     if not coordinates:

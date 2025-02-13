@@ -13,7 +13,7 @@ class PostcodesAPIClient:
         self.base_url = 'https://api.postcodes.io'
         self.session = requests.Session()
         self.timeout = 30
-        self.max_requests_per_minute = 5000
+        self.max_requests_per_minute = 2000
         self.request_interval = 60.0 / self.max_requests_per_minute
         self.last_request_time = 0
         self.lock = Lock()
