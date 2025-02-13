@@ -1,4 +1,3 @@
-# dags/setup_connections_dag.py
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -34,7 +33,7 @@ def create_connections(session=None):
         port=5432
     )
     
-    # Lista de conexiones a crear/actualizar
+    # Lista de conexiones
     connections = [fs_conn, db_conn]
     
     for conn in connections:
@@ -58,4 +57,5 @@ with DAG(
         python_callable=create_connections
     )
 
-    # Podríamos agregar más tareas de configuración aquí si son necesarias
+    create_conn
+    
