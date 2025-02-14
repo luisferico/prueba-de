@@ -79,6 +79,32 @@ Inicialmente debes encontrar 3 Dags activaran y ejecutaran progresivamente avanc
 
 - El DAG de **enriquecimiento** (`02_postcode_enrichment`) se ejecutará aautomáticamente una vez finalice el primer dag. Este proceso se encarga de obtener las coordenadas no procesadas de la tabla raw_coordinates en lotes de 2000 registros. Para cada lote, se realizan llamadas en paralelo a la API de `postcodes.io` utilizando un máximo de 10 hilos simultáneos y respetando un límite de 2000 peticiones por minuto. Los códigos postales obtenidos se almacenan en la tabla `postcode_details`, y se crea la relación con las coordenadas en `coordinates_postcodes`. Si durante el proceso ocurre algún error, este se registra en la tabla `error_logs` para su posterior análisis. El proceso se repite automáticamente mientras existan coordenadas sin procesar.
 
+#### Verificación de datos usando el backup
+
+Si se desea se ha compartido en Google Drive un archivo comprimido donde encontrara 2 carpetas con los resultados obtenidos. Para hacer la correcta recuperación de estos datos puede seguir los siguientes pasos:
+
+1. **Descargar Backup**
+   - El archivo ZIP con los datos completos está disponible en [Google Drive](https://drive.google.com/file/d/1Ad6kOV6x0DEA7mhwYeKMa0ppQg_BeFsB/view?usp=sharing).
+   - Descárgalo y descomprímelo en la raíz de tu proyecto.
+
+2. **Mueve el archivo `restore.sh` a la carpeta `db-init/`**
+   ```bash
+   mv ./database-backups/restore.sh ./db-init/restore.sh
+   ```
+
+3. **Preparación del Docker Compose**
+   - Abre el archivo `docker-compose.yml`
+   - Descomenta la línea de volumen para los backups:
+   
+   ```yaml
+   # - ./database-backups:/backups
+   ```
+
+4. **Permisos del Script de Restauración**
+   ```bash
+   chmod +x db-init/restore.sh
+   ```
+5. **Continuar con los pasos de configuración del entorno Airflow**
 
 ### **Diseño de Base de Datos**
 
