@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.python import PythonOperator
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator, BranchPythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 from utils.api_client import PostcodesAPIClient
@@ -93,7 +94,10 @@ def _enrich_coordinates(**context):
 def _should_continue(**context):
     """Verificar si hay más coordenadas para procesar"""
     coordinates = get_unprocessed_coordinates(1)  # Solo verificamos si hay al menos una
-    return bool(coordinates)
+    if bool(coordinates):
+        return 'trigger_next_batch'
+    else:
+        return 'dummy_end'
 
 with DAG(
     '02_postcode_enrichment',
@@ -116,7 +120,7 @@ with DAG(
         python_callable=_enrich_coordinates
     )
     
-    check_more_coordinates = PythonOperator(
+    check_more_coordinates = BranchPythonOperator(
         task_id='check_more_coordinates',
         python_callable=_should_continue
     )
@@ -128,5 +132,9 @@ with DAG(
         trigger_rule='all_success'
     )
     
-    get_coordinates >> enrich_coordinates >> check_more_coordinates >> trigger_next_batch
+    dummy_end = EmptyOperator(
+        task_id='dummy_end'
+    )
+    
+    get_coordinates >> enrich_coordinates >> check_more_coordinates >> [trigger_next_batch, dummy_end]
  
