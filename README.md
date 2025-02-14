@@ -21,7 +21,7 @@ La solución para procesar y enriqueser los datos fue desplegada utilizando **Do
 graph TD
     Client[Cliente] -->|Upload CSV| FS[File Service]
     FS -->|Almacena coordenadas| DB[(Database)]
-    FS -->|Envía coordenadas| PS[Postcode Service]
+    FS -->|Envía coordenadas| PS[Enrichment Service]
     PS -->|Consulta códigos postales| API[postcodes.io API]
     API -->|Devuelve información| PS
     PS -->|Actualiza registros| DB
@@ -47,8 +47,8 @@ El flujo de datos en el sistema es el siguiente:
 
 ## Cómo Ejecutar el Proyecto
 
-### **Configuración del Entorno**
-
+### **Configuración del Entorno Airflow**
+ 
 1. Habilitar permisos al archivo `creation-tables.sql`:
 ```bash
 chmod +x init-scripts/creation-tables.sql
@@ -89,7 +89,22 @@ La base de datos se diseñó siguiendo un enfoque que separa los datos crudos de
 Los índices fueron seleccionados para optimizar los patrones de consulta más frecuentes y las operaciones críticas del sistema. En raw_coordinates, se implementó un índice compuesto sobre (latitude, longitude) para acelerar las búsquedas y la detección de duplicados. El índice sobre processed optimiza la identificación de registros pendientes de procesamiento, mientras que el índice sobre batch_id mejora el rendimiento de las operaciones por lotes. En `postcode_details`, el índice único sobre postcode garantiza la unicidad y acelera las búsquedas por código postal, complementado por índices adicionales sobre region y country para mejorar el rendimiento de las agregaciones geográficas. La tabla `coordinates_postcodes` se crearon índices sobre sus llaves foráneas para optimizar los joins, y un índice sobre `distance` para mejorar el rendimiento de las consultas que involucran análisis de proximidad.
 
 ### **Reportes**
+
+El analisis exploratorio de los datos se puede encontrar en el siguiente [notebook](notebooks/eda_postcodes.ipynb), las dependencias necesarias para su ejecutarlo lo encuentras en este [requirement](notebooks/requirements.txt)
+
 Los datos enriquecidos y las estadísticas se generarán en archivos CSV:
-- `data/postcode_enriched_data.csv`
-- `data/postcode_quality_statistics.csv`
-- `data/top_postcodes.csv`
+- [`postcode_enriched_data.csv`](data/postcode_enriched_data.csv)
+- [`postcode_quality_statistics.csv`](data/postcode_quality_statistics.csv)
+- [`top_postcodes.csv`](data/top_postcodes.csv)
+ 
+## **Mejoras**
+
+La arquitectura actual enriquece alrededor de 85mil registros cada hora, lo que significa que para el archivo de 2 millones de registros, el enriquecimiento completo toma alrededor de 24 horas. Si bien el sistema cumple con su objetivo, hay varias optimizaciones que hubieran podido mejorar su eficiencia.
+
+- Se pudo haber implementado un sistema de caché para coordenadas cercanas evitando llamadas API redundantes, el problema es definir una distancia del codigo postal a la coordenada.
+
+- Tambien tuve warnings con el connection pooling de la base de datos que actualmente está limitado a 10 conexiones simultáneas, y debi haberlo optimizado para agilizar el proceso de enriquecimiento por medio de la API.
+
+- Y un error de perdida de datos, ya que se me paso escribir la logica para poblar la tabla `postcode_codes` que enriquecia tambien los codigos postales obtenidos.
+
+Viendo desde un punto de vista funcional del dato, una mejora sería la separación de las cargas transaccionales y analíticas. La implementación actual utiliza la misma base de datos PostgreSQL tanto para el procesamiento de datos como para el análisis, lo que genera contencion de recursos. Para obtener una arquitectura más robusta hubiera podido crear un data warehouse separado (OLAP) para análisis (duckdb). Para ello hubiera requerido un proceso `EL` adicional para migrar los datos al warehouse.
